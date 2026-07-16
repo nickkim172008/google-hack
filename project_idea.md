@@ -34,6 +34,10 @@ World Cup fans in Toronto will be unfamiliar with local transit, matchday closur
 - **One match:** Canada vs Italy, BMO Field, 7:30 PM kickoff (demo fixture)
 - Route recommendation with explainable crowd-risk scoring (seeded)
 - Scripted match-event replay: transit alert → rerank, kickoff, 89' tied, extra time, full-time → staggered egress plan
+- Live user location via the browser Geolocation API (with honest out-of-demo-area handling)
+- Light/dark theme toggle (light default)
+- Phase-evolving crowd-pressure heatmap (seeded, "forecasted relative" labeling)
+- Nearby-events awareness: concurrent downtown events (fan festival, concert, ballgame) with mobility-impact notes
 - Honest "DEMO REPLAY" labeling at all times
 
 ### Out of scope (cut from v1.0)
@@ -46,25 +50,38 @@ World Cup fans in Toronto will be unfamiliar with local transit, matchday closur
 ## 4. Architecture (as built)
 
 ```text
-data/seed.ts  — single hand-curated file: match, origins, venue,
-   |            3 routes (steps, polylines, risk factors), event timeline
-   v
+User input                              data/seed.ts — single hand-curated file:
+ • origin: preset chips OR live          match, origins, venue, 3 routes (steps,
+   geolocation (browser Geolocation      polylines, risk factors), heatPhases,
+   API — permission prompt, out-of-      nearbyEvents, event timeline
+   area fallback to Union)                     |
+ • priority, arrival buffer                    |
+ • theme: light/dark toggle                    |
+   (light default, localStorage)               |
+        |                                      |
+        v                                      v
 Replay controller — React state; keyboard `n` advances / `b` rewinds
    |                the deterministic event timeline
    v
-+---------------------------------------------------------------+
-| Next.js (App Router, TypeScript, Tailwind) — single page       |
-|                                                                 |
-|  Full-screen react-leaflet MapContainer (OSM tiles, no keys)    |
-|   • divIcon markers: origins, BMO Field                         |
-|   • route polylines re-draw in place on rerank                  |
-|                                                                 |
-|  Floating overlay panels (dark glass, z-index above map panes)  |
-|   • Plan form  → Recommended plan (leave-by hero, route cards,  |
-|     "Why this route?", fallback)                                |
-|   • Live matchday (match clock, event feed, egress plan)        |
-|   • Corner pills: DEMO REPLAY · data freshness                  |
-+---------------------------------------------------------------+
++-----------------------------------------------------------------+
+| Next.js (App Router, TypeScript, Tailwind) — single page         |
+|                                                                   |
+|  Full-screen react-leaflet MapContainer (OSM tiles, no keys)      |
+|   • divIcon markers: origins, BMO Field, live-location dot,       |
+|     nearby events (fan festival / concert / ballgame)             |
+|   • route polylines re-draw in place on rerank                    |
+|   • crowd heatmap overlay: layered translucent circles, seeded    |
+|     per replay phase — heat migrates King St → Exhibition GO as   |
+|     the match progresses (toggleable, "forecasted, relative")     |
+|                                                                   |
+|  Floating overlay panels (glass, z-index above map panes;         |
+|  themed light/dark)                                               |
+|   • Plan form  → Recommended plan (leave-by hero, route cards,    |
+|     "Why this route?", fallback)                                  |
+|   • Events nearby (impact lines + "affects your plan" chips)      |
+|   • Live matchday (match clock, event feed, egress plan)          |
+|   • Corner pills: DEMO REPLAY · data freshness                    |
++-----------------------------------------------------------------+
 ```
 
 Key properties:
