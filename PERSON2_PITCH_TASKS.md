@@ -18,15 +18,17 @@ Use the draft below as your starting point. Rewrite it in your own voice — you
 
 **DEMO NARRATION (~1:50)** — you talk, the driver clicks. Cue sheet below.
 
-> [Driver fills the form] We're a visiting family staying downtown. Priority: least crowded, limited walking. Build my plan.
+> [Driver clicks 📍 Use my location] It finds you where you actually are — and it's honest when you're outside the demo area. We're a visiting family staying downtown, so: Union Station. Priority: least crowded, limited walking. Build my plan.
 >
-> [Plan appears] Notice what it leads with — not a map, a decision: **leave by 5:42**. And look at the route it picked: it is NOT the fastest one. Route B is six minutes slower — [driver opens "Why this route?"] — and the app tells you exactly why: it avoids the main pre-match crowd corridor, and it has less walking. Every recommendation is explainable. No black box.
+> [Plan appears] Notice what it leads with — not a map, a decision: **leave by 5:42**. And look at the route it picked: it is NOT the fastest one. Route B is six minutes slower — [driver opens "Why this route?"] — and the app tells you exactly why: it avoids the main pre-match crowd corridor, and it has less walking. Every recommendation is explainable. No black box. That glow on the map is forecasted crowd pressure — see King Street burning before kickoff? That's why we're not on it.
+>
+> [Driver expands Events nearby] And it's not just the match: there's a concert at Budweiser Stage next door, and the Jays are at Rogers Centre tonight — every one of these has a mobility impact, and the plan knows it.
 >
 > [Driver presses `n` — transit alert] Now matchday happens: a service alert hits our rail line. Watch the map — [route reranks live] — the plan adapts in real time, tells you what changed and why, and updates your leave-by time.
 >
 > [Driver presses `n` through kickoff → 89'] The match is on, and here's what no maps product does: it's 1–1 in the 89th minute. That means nobody knows when this match ends — so MatchMile is already preparing two departure plans.
 >
-> [`n` — extra time] Extra time. The expected end time just moved — recalculated. [`n` — full time] Full time: 20,000 people leave at once. The app doesn't say "walk to the station" — it says the station is at peak crush for 25 minutes, wait at the fan zone, depart at 9:55. That's a *matchday plan*, not directions.
+> [`n` — extra time] Extra time. The expected end time just moved — recalculated. [`n` — full time] Full time: 20,000 people leave at once — and watch the heatmap: the pressure just migrated from the corridor to the station. The app doesn't say "walk to the station" — it says the station is at peak crush for 25 minutes, wait at the fan zone, depart at 9:55. Oh — and it already knows the concert next door lets out at ten. That's a *matchday plan*, not directions.
 
 **CLOSE (~30 sec)**
 
@@ -38,12 +40,14 @@ Use the draft below as your starting point. Rewrite it in your own voice — you
 
 | # | Your line (cue) | Driver action |
 |---|---|---|
-| 1 | "Build my plan" | Fill form: Least crowded → submit |
-| 2 | "why this route?" | Expand the Why panel |
-| 3 | "matchday happens" | Press `n` (transit alert → rerank) |
-| 4 | "the match is on" | Press `n` (kickoff), then `n` (89' 1–1) |
-| 5 | "Extra time" | Press `n` |
-| 6 | "Full time" | Press `n` |
+| 1 | "finds you where you actually are" | Click 📍 Use my location, then Union Station chip |
+| 2 | "Build my plan" | Select Least crowded → submit |
+| 3 | "why this route?" | Expand the Why panel (then point at the King St heat glow) |
+| 4 | "not just the match" | Expand Events nearby |
+| 5 | "matchday happens" | Press `n` (transit alert → rerank) |
+| 6 | "the match is on" | Press `n` (kickoff), then `n` (89' 1–1) |
+| 7 | "Extra time" | Press `n` |
+| 8 | "Full time" | Press `n` (point at the heat migrating to the station) |
 
 - `n` = next event, `b` = go back one (recovery if you overshoot)
 - Presenter never drives. Agree on the cue words above and don't improvise them.
@@ -54,7 +58,8 @@ Use the draft below as your starting point. Rewrite it in your own voice — you
 
 Have crisp answers ready for:
 
-- **"Is this live data?"** → "It's a deterministic replay, labeled 'DEMO REPLAY' on screen — deliberately, so we never fake liveness. The architecture consumes live feeds per city; replay is also how we make judging reproducible."
+- **"Is this live data?"** → "It's a deterministic replay, labeled 'DEMO REPLAY' on screen — deliberately, so we never fake liveness. The architecture consumes live feeds per city; replay is also how we make judging reproducible. The one live input is your location — that's the real browser Geolocation API."
+- **"Is the heatmap real crowd data?"** → "It's forecasted relative pressure, seeded and labeled that way — we never claim live density. With a transit-telemetry partner, the same layer renders real data."
 - **"How is the crowd risk calculated?"** → "A transparent weighted score: event-time demand, corridor proximity, service disruptions, closures. Every score ships with its reason factors — you saw them in the Why panel."
 - **"Where's the AI?"** → "The recommendation engine is deterministic on purpose — an LLM may polish explanations but can never invent routes, closures, or timings. That's a safety stance: wrong travel advice at a mega-event is a real harm."
 - **"Why not just Google Maps?"** → "Maps optimizes ETA. We optimize a matchday: leave-by time, crowd exposure, accessibility constraints, and an egress plan that reacts to extra time. Different objective function."
