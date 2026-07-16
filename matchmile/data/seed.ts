@@ -106,7 +106,7 @@ export const match = {
 export const origins: Origin[] = [
   { id: "union", label: "Union Station", lat: 43.6453, lng: -79.3806 },
   { id: "hotel", label: "Downtown Hotel — King & Bay", lat: 43.6487, lng: -79.3817 },
-  { id: "liberty", label: "Liberty Village", lat: 43.6371, lng: -79.42 },
+  { id: "liberty", label: "Liberty Village", lat: 43.6387, lng: -79.4198 },
 ];
 
 export const venue = {
@@ -143,17 +143,20 @@ export const routes: Route[] = [
     walkMinutes: 6,
     polyline: [
       [43.6453, -79.3806], // Union Station
-      [43.647, -79.3812], // walk north to King St
-      [43.6478, -79.3854], // King & University
-      [43.6463, -79.3913], // King & John
-      [43.6452, -79.3957], // King & Spadina
-      [43.6442, -79.4022], // King & Bathurst
-      [43.6427, -79.4073], // King & Niagara
-      [43.6414, -79.4103], // King & Strachan
-      [43.6389, -79.413], // south on Strachan
-      [43.6365, -79.4155], // Exhibition Loop
-      [43.6348, -79.4172],
-      [43.6332, -79.4186], // BMO Field
+      [43.6489, -79.3785], // King & Bay streetcar stop
+      [43.6482, -79.3818], // King & York
+      [43.6472, -79.3852], // King & University
+      [43.6459, -79.391], // King & John
+      [43.6448, -79.3947], // King & Spadina
+      [43.6444, -79.3987], // King & Portland
+      [43.6441, -79.4024], // King & Bathurst
+      [43.6434, -79.4056], // King & Niagara
+      [43.6425, -79.4093], // King & Strachan
+      [43.6403, -79.411], // Strachan Ave south, over the rail corridor
+      [43.6383, -79.4125], // Strachan & Fleet
+      [43.6362, -79.4145], // Exhibition Loop
+      [43.6345, -79.4165], // through Exhibition grounds
+      [43.6332, -79.4186], // BMO Field east gate
     ],
     crowdRisk: { score: 68, label: "high" },
     factors: [
@@ -187,16 +190,17 @@ export const routes: Route[] = [
     totalMinutes: 33,
     walkMinutes: 9,
     polyline: [
-      [43.6453, -79.3806], // Union Station
-      [43.644, -79.385], // rail corridor SW
-      [43.6425, -79.3905],
-      [43.641, -79.3965],
-      [43.6398, -79.403],
-      [43.6388, -79.409],
-      [43.638, -79.4145],
-      [43.6355, -79.4193], // Exhibition GO
-      [43.6345, -79.419],
-      [43.6332, -79.4186], // BMO Field
+      [43.6453, -79.3806], // Union Station GO concourse
+      [43.6437, -79.386], // rail corridor SW past the Rogers Centre
+      [43.6423, -79.3915],
+      [43.641, -79.397],
+      [43.6399, -79.4025],
+      [43.639, -79.408], // passing Fort York
+      [43.6379, -79.4135],
+      [43.6367, -79.418],
+      [43.6356, -79.42], // Exhibition GO
+      [43.6344, -79.4193], // walk through the Exhibition grounds
+      [43.6332, -79.4186], // BMO Field west gate
     ],
     crowdRisk: { score: 24, label: "low" },
     factors: [
@@ -229,16 +233,19 @@ export const routes: Route[] = [
     walkMinutes: 14,
     polyline: [
       [43.6453, -79.3806], // Union Station (509 loop)
-      [43.642, -79.38], // Bay & Queens Quay
-      [43.6395, -79.385], // Queens Quay & York
-      [43.6385, -79.392], // Queens Quay & Rees
-      [43.637, -79.399], // Queens Quay & Spadina
-      [43.636, -79.405],
-      [43.6355, -79.4105], // Fleet & Bathurst
-      [43.6338, -79.413], // Fleet St loop
-      [43.6325, -79.4155], // Martin Goodman Trail
-      [43.6328, -79.4175],
-      [43.6332, -79.4186], // BMO Field
+      [43.6404, -79.3771], // Queens Quay & Bay (out of the tunnel)
+      [43.6398, -79.3812], // Queens Quay & York
+      [43.6389, -79.386], // Queens Quay & Rees
+      [43.6377, -79.3905], // Queens Quay & Lower Spadina approach
+      [43.6362, -79.3936], // Queens Quay & Spadina
+      [43.636, -79.3975], // Queens Quay & Dan Leckie Way
+      [43.6362, -79.4008], // Fleet & Bathurst
+      [43.6359, -79.4055], // Fleet St west
+      [43.6357, -79.4092], // Fleet & Strachan loop
+      [43.634, -79.411], // south to the waterfront
+      [43.6325, -79.414], // Martin Goodman Trail west
+      [43.6318, -79.417], // trail at Ontario Place approach
+      [43.6332, -79.4186], // BMO Field south gate
     ],
     crowdRisk: { score: 35, label: "medium" },
     factors: [
@@ -346,7 +353,7 @@ export const timeline: TimelineEvent[] = [
     clock: "5:20 PM",
     title: "Service alert: GO Lakeshore West",
     detail: "Service alert: GO Lakeshore West delays at Exhibition GO. Route B rail segment affected — plan reranked.",
-    location: [43.6355, -79.4193], // Exhibition GO
+    location: [43.6356, -79.42], // Exhibition GO
   },
   {
     id: "evt-002",
