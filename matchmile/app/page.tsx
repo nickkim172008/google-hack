@@ -20,6 +20,7 @@ import PlanPanel, { type MyLocationState } from "@/components/PlanPanel";
 import RecommendedPanel from "@/components/RecommendedPanel";
 import LivePanel from "@/components/LivePanel";
 import Toast, { type ToastNotice } from "@/components/Toast";
+import Chatbot from "@/components/Chatbot";
 
 // Leaflet touches `window` — render the map client-side only.
 const MapCanvas = dynamic(() => import("@/components/MapCanvas"), {
@@ -379,6 +380,9 @@ export default function Home() {
 
       {/* Event + app notices */}
       <Toast notice={notice} />
+
+      {/* Scripted matchday assistant */}
+      {planBuilt && <Chatbot view={view} origin={origin} />}
     </main>
   );
 }
