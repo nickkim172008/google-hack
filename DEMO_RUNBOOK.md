@@ -13,7 +13,8 @@ npm install        # first time only
 npm run dev
 ```
 
-- Next.js prints the URL. **Watch the port**: it's `http://localhost:3000` normally, but auto-bumps to **3001** if something else holds 3000 (on Nick's laptop it does — another dev server owns 3000). Kill it first or just use 3001.
+- Next.js prints the URL. **Watch the port**: `http://localhost:3000` normally, auto-bumps to 3001 if another dev server holds 3000. Read the port off the `npm run dev` output and use that.
+- **Disable page-altering extensions for localhost — especially Dark Reader.** It repaints the app's colors (flattening the light/dark themes), breaks React hydration (red "Issue" badge), and can wash out map tiles. Click the Dark Reader icon → disable for this site → reload. Do this on whatever laptop presents.
 - Open the URL in Chrome, full-screen the window (`Cmd+Ctrl+F`).
 - Confirm the map tiles load (needs wifi) and the plan form panel is visible.
 - **Warm the tile cache:** pan/zoom around the Union → BMO Field area once. If venue wifi dies mid-demo, cached tiles keep the map alive.
