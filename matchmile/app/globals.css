@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
+/* Manual theme switching: `dark:` utilities key off data-theme="dark" on the
+ * root container (set from React state in app/page.tsx). Light is default. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
-  --background: #0b1210;
-  --foreground: #f0f5f2;
+  --background: #f1f5f9;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -32,27 +36,50 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
- * Leaflet — dark theme + layering
+ * Leaflet — theming + layering
  * Leaflet panes use z-index up to ~700; the floating UI layer sits at 1000+.
  * ------------------------------------------------------------------------- */
 .mm-map {
-  background: #0b1210;
+  background: #dbe4ec; /* light tile placeholder */
   outline: none;
 }
+[data-theme="dark"] .mm-map {
+  background: #0b1210;
+}
 
-/* Dark cartography from standard OSM tiles (no extra tile host needed) */
-.mm-map .leaflet-tile-pane {
+/* Dark cartography from standard OSM tiles (dark theme only, no extra host) */
+[data-theme="dark"] .mm-map .leaflet-tile-pane {
   filter: grayscale(1) invert(1) hue-rotate(180deg) brightness(0.8) contrast(1.06)
     saturate(0.55);
 }
 
 .mm-map .leaflet-control-attribution {
-  background: rgba(11, 18, 16, 0.75) !important;
-  color: rgba(255, 255, 255, 0.45) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  color: rgba(15, 23, 42, 0.55) !important;
   font-size: 10px;
 }
 .mm-map .leaflet-control-attribution a {
+  color: rgba(5, 150, 105, 0.9) !important;
+}
+[data-theme="dark"] .mm-map .leaflet-control-attribution {
+  background: rgba(11, 18, 16, 0.75) !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+[data-theme="dark"] .mm-map .leaflet-control-attribution a {
   color: rgba(52, 211, 153, 0.75) !important;
+}
+
+/* Marker name tooltips (nearby events) */
+[data-theme="dark"] .mm-map .leaflet-tooltip {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+}
+[data-theme="dark"] .mm-map .leaflet-tooltip-top::before {
+  border-top-color: rgba(15, 23, 42, 0.95);
+}
+[data-theme="dark"] .mm-map .leaflet-tooltip-bottom::before {
+  border-bottom-color: rgba(15, 23, 42, 0.95);
 }
 
 /* Smooth route restyling when the replay reranks routes */
@@ -75,9 +102,26 @@ body {
   width: 18px;
   height: 18px;
   border-radius: 9999px;
-  background: #34d399;
-  border: 3px solid #06201a;
+  background: #10b981;
+  border: 3px solid #ffffff;
   animation: mm-pulse-ring 2s ease-out infinite;
+}
+[data-theme="dark"] .mm-marker-origin {
+  background: #34d399;
+  border-color: #06201a;
+}
+
+/* Browser-geolocation dot ("Use my location") */
+.mm-marker-user {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #3b82f6;
+  border: 3px solid #ffffff;
+  animation: mm-pulse-blue 2s ease-out infinite;
+}
+[data-theme="dark"] .mm-marker-user {
+  border-color: #0b1210;
 }
 
 .mm-marker-venue {
@@ -123,6 +167,23 @@ body {
   border: 2px solid #451a03;
   box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.25);
   animation: mm-pulse-amber 1.6s ease-out infinite;
+}
+
+/* Nearby-event markers (🎪 🎵 ⚾) */
+.mm-marker-event {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(71, 85, 105, 0.35);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+[data-theme="dark"] .mm-marker-event {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* ---------------------------------------------------------------------------
@@ -178,7 +239,19 @@ body {
     box-shadow: 0 0 0 14px rgba(52, 211, 153, 0);
   }
   100% {
-    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.35);
+  }
+}
+
+@keyframes mm-pulse-blue {
+  0% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
   }
 }
 
@@ -210,12 +283,18 @@ body {
 /* Hidden-but-scrollable panels */
 .scroll-area {
   scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.2) transparent;
+}
+[data-theme="dark"] .scroll-area {
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 .scroll-area::-webkit-scrollbar {
   width: 5px;
 }
 .scroll-area::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.2);
   border-radius: 9999px;
+}
+[data-theme="dark"] .scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
 }

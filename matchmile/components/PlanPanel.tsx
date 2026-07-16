@@ -10,7 +10,11 @@ import {
   origins,
   priorities,
   venue,
+  type HeatPhaseKey,
 } from "@/data/seed";
+import EventsNearby from "@/components/EventsNearby";
+
+export type MyLocationState = "none" | "pending" | "ok" | "outside";
 
 interface PlanPanelProps {
   originId: string;
@@ -20,11 +24,15 @@ interface PlanPanelProps {
   priority: string;
   setPriority: (id: string) => void;
   onBuild: () => void;
+  /** Browser geolocation ("Use my location") */
+  onUseLocation: () => void;
+  myLocationState: MyLocationState;
+  heatPhase: HeatPhaseKey;
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40">
+    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-white/40">
       {children}
     </p>
   );
@@ -51,10 +59,10 @@ function Chip({
       title={title}
       className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
         selected
-          ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-200"
+          ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-800 dark:border-emerald-400/60 dark:bg-emerald-400/15 dark:text-emerald-200"
           : disabled
-            ? "cursor-not-allowed border-white/5 bg-white/[0.02] text-white/25"
-            : "border-white/10 bg-white/[0.04] text-white/70 hover:border-white/25 hover:text-white"
+            ? "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 dark:border-white/5 dark:bg-white/[0.02] dark:text-white/25"
+            : "border-slate-200 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/70 dark:hover:border-white/25 dark:hover:text-white"
       }`}
     >
       {children}
@@ -70,14 +78,17 @@ export default function PlanPanel({
   priority,
   setPriority,
   onBuild,
+  onUseLocation,
+  myLocationState,
+  heatPhase,
 }: PlanPanelProps) {
   return (
     <div className="flex flex-col gap-5 p-5">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight text-white">
+        <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
           Plan your matchday
         </h2>
-        <p className="mt-1 text-xs leading-relaxed text-white/50">
+        <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-white/50">
           Not just directions — when to leave, which route carries the lowest
           forecasted crowd risk, and how you get home.
         </p>
@@ -104,19 +115,19 @@ export default function PlanPanel({
       {/* Match card */}
       <div className="space-y-2">
         <SectionLabel>Tonight&apos;s match</SectionLabel>
-        <div className="rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-400/10 to-transparent p-4">
+        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-400/15 to-transparent p-4 dark:border-emerald-400/25 dark:from-emerald-400/10">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300/80">
               World Cup 2026 · {match.stage}
             </span>
-            <span className="text-[10px] text-white/40">{match.dateLabel}</span>
+            <span className="text-[10px] text-slate-400 dark:text-white/40">{match.dateLabel}</span>
           </div>
-          <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-white">
+          <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
             <span aria-hidden>{match.home.flag}</span> {match.home.name}
-            <span className="text-white/40">vs</span>
+            <span className="text-slate-400 dark:text-white/40">vs</span>
             {match.away.name} <span aria-hidden>{match.away.flag}</span>
           </div>
-          <p className="mt-1 text-xs text-white/50">
+          <p className="mt-1 text-xs text-slate-500 dark:text-white/50">
             {match.venueName} · Kickoff {match.kickoffLabel}
           </p>
         </div>
@@ -135,7 +146,20 @@ export default function PlanPanel({
               {o.label}
             </Chip>
           ))}
+          <Chip
+            selected={originId === "my-location"}
+            onClick={onUseLocation}
+            title="Uses your browser's location — stays on this device"
+          >
+            📍 {myLocationState === "pending" ? "Locating…" : "Use my location"}
+          </Chip>
         </div>
+        {originId === "my-location" && myLocationState === "outside" && (
+          <p className="animate-fade-slide rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200">
+            You&apos;re outside the demo area — routes are seeded for downtown
+            Toronto, so Union Station stays the route origin.
+          </p>
+        )}
       </div>
 
       {/* Destination */}
@@ -177,15 +201,21 @@ export default function PlanPanel({
         </div>
       </div>
 
+      {/* Other events tonight */}
+      <div className="space-y-2">
+        <SectionLabel>Also on tonight</SectionLabel>
+        <EventsNearby heatPhase={heatPhase} />
+      </div>
+
       <button
         type="button"
         onClick={onBuild}
-        className="mt-1 h-12 w-full rounded-2xl bg-emerald-400 text-sm font-bold text-emerald-950 shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:bg-emerald-300 active:scale-[0.98]"
+        className="mt-1 h-12 w-full rounded-2xl bg-emerald-500 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:bg-emerald-600 active:scale-[0.98] dark:bg-emerald-400 dark:text-emerald-950 dark:shadow-emerald-500/20 dark:hover:bg-emerald-300"
       >
         Build my plan
       </button>
 
-      <p className="text-center text-[10px] leading-relaxed text-white/30">
+      <p className="text-center text-[10px] leading-relaxed text-slate-400 dark:text-white/30">
         Recommendations use forecasted relative congestion — not live crowd
         density. Follow event staff and official signage on site.
       </p>

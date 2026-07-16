@@ -9,6 +9,7 @@ import {
   plan,
   routes,
   timeline,
+  type HeatPhaseKey,
   type Route,
   type TimelineEvent,
 } from "@/data/seed";
@@ -42,6 +43,8 @@ export interface ReplayView {
   feed: TimelineEvent[];
   planView: PlanView;
   egressStage: EgressStage;
+  /** Which crowd-heat phase (and "affects your plan" window) is active */
+  heatPhase: HeatPhaseKey;
 }
 
 export function routeById(id: string): Route {
@@ -85,6 +88,11 @@ export function deriveReplayView(index: number): ReplayView {
   else if (extraTime) egressStage = "extra_time";
   else if (scoreUpdate) egressStage = "options";
 
+  // ----- Crowd-heat phase (drives the map heat overlay + nearby events) ---
+  let heatPhase: HeatPhaseKey = "pre_match";
+  if (extraTime || fullTime) heatPhase = "post_match";
+  else if (kickedOff) heatPhase = "in_match";
+
   // ----- Plan (reranked by the transit alert) ------------------------------
   const planView: PlanView = alertActive
     ? {
@@ -122,6 +130,7 @@ export function deriveReplayView(index: number): ReplayView {
     feed: [...applied].reverse(),
     planView,
     egressStage,
+    heatPhase,
   };
 }
 

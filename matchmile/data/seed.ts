@@ -14,6 +14,8 @@
  *   plan       → leave-by / arrive-by copy, before and after the transit alert
  *   egress     → post-match departure copy (89' options, extra time, full-time)
  *   timeline   → THE scripted replay. Press `n` to advance, `b` to go back.
+ *   heatPhases → forecasted crowd-pressure hotspots per replay phase (map heat)
+ *   nearbyEvents → other seeded events tonight (fan festival, concert, Jays)
  * ============================================================================
  */
 
@@ -412,3 +414,107 @@ export const priorities = [
 export const arrivalBuffers = [45, 60, 75, 90]; // minutes before kickoff
 
 export const dataFreshnessSeconds = 20;
+
+/* ----------------------------- Crowd heat --------------------------------
+ * Forecasted RELATIVE crowd pressure per replay phase — drawn as translucent
+ * concentric circles on the map (never presented as live density).
+ * intensity is 0–1: < 0.45 renders amber, 0.45–0.74 orange, ≥ 0.75 rose.
+ * The active phase follows the replay: press `n` and the heat evolves.
+ * ------------------------------------------------------------------------ */
+
+export type HeatPhaseKey = "pre_match" | "in_match" | "post_match";
+
+export interface HeatSpot {
+  /** Editor-facing label (not rendered) */
+  name: string;
+  lat: number;
+  lng: number;
+  /** 0–1 relative forecasted crowd pressure */
+  intensity: number;
+}
+
+export const heatPhases: Record<HeatPhaseKey, HeatSpot[]> = {
+  /** Arrival surge: King St W corridor + Exhibition Loop + stadium gates */
+  pre_match: [
+    { name: "King & Spadina", lat: 43.6448, lng: -79.3947, intensity: 0.55 },
+    { name: "King & Bathurst", lat: 43.6441, lng: -79.4024, intensity: 0.62 },
+    { name: "King & Strachan", lat: 43.6425, lng: -79.4093, intensity: 0.68 },
+    { name: "Exhibition Loop", lat: 43.6362, lng: -79.4145, intensity: 0.85 },
+    { name: "Union Station", lat: 43.6453, lng: -79.3806, intensity: 0.5 },
+    { name: "BMO Field gates", lat: 43.6332, lng: -79.4186, intensity: 0.8 },
+  ],
+  /** During the match: streets quiet, pressure inside the stadium */
+  in_match: [
+    { name: "Union Station", lat: 43.6453, lng: -79.3806, intensity: 0.25 },
+    { name: "King St W corridor", lat: 43.6444, lng: -79.3987, intensity: 0.2 },
+    { name: "BMO Field (in-stadium)", lat: 43.6332, lng: -79.4186, intensity: 0.5 },
+  ],
+  /** Egress surge (extra time & full-time): Exhibition GO peaks */
+  post_match: [
+    { name: "Exhibition GO", lat: 43.6356, lng: -79.42, intensity: 0.95 },
+    { name: "BMO Field gates", lat: 43.6332, lng: -79.4186, intensity: 0.8 },
+    { name: "Fan Festival", lat: 43.635, lng: -79.413, intensity: 0.55 },
+    { name: "King St W corridor", lat: 43.6434, lng: -79.4056, intensity: 0.45 },
+  ],
+};
+
+/* ----------------------------- Nearby events -----------------------------
+ * Other seeded events tonight — shown as map markers (🎪 🎵 ⚾) and in the
+ * collapsible "Events nearby" panel. `affectsDuring` controls when the amber
+ * "affects your plan" chip appears (keyed to the replay phase).
+ * ------------------------------------------------------------------------ */
+
+export interface NearbyEvent {
+  id: string;
+  name: string;
+  venue: string;
+  lat: number;
+  lng: number;
+  timeLabel: string;
+  category: "fan-festival" | "concert" | "sports";
+  /** Emoji used for the map marker */
+  icon: string;
+  /** One-line mobility impact, honest and specific */
+  mobilityImpact: string;
+  /** Replay phases during which this event adds pressure to the user's plan */
+  affectsDuring: HeatPhaseKey[];
+}
+
+export const nearbyEvents: NearbyEvent[] = [
+  {
+    id: "fan-festival",
+    name: "FIFA Fan Festival",
+    venue: "Exhibition Place",
+    lat: 43.635,
+    lng: -79.413,
+    timeLabel: "3–11 PM",
+    category: "fan-festival",
+    icon: "🎪",
+    mobilityImpact: "Adds steady crowd across the Exhibition grounds all evening",
+    affectsDuring: ["pre_match", "post_match"],
+  },
+  {
+    id: "budweiser-stage-concert",
+    name: "Concert",
+    venue: "Budweiser Stage",
+    lat: 43.6289,
+    lng: -79.4155,
+    timeLabel: "8:00 PM",
+    category: "concert",
+    icon: "🎵",
+    mobilityImpact: "Ends ≈10 PM — overlaps match egress, adds pressure at Exhibition GO",
+    affectsDuring: ["post_match"],
+  },
+  {
+    id: "jays-red-sox",
+    name: "Blue Jays vs Red Sox",
+    venue: "Rogers Centre",
+    lat: 43.6414,
+    lng: -79.3894,
+    timeLabel: "7:05 PM",
+    category: "sports",
+    icon: "⚾",
+    mobilityImpact: "Union Station busy 6–7 PM and again ≈9:45 PM",
+    affectsDuring: ["pre_match"],
+  },
+];
