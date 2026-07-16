@@ -78,6 +78,8 @@ Key properties:
 
 **Inputs:** origin (3 downtown presets: Union Station, Downtown Hotel — King & Bay, Liberty Village), destination (BMO Field, pre-selected), arrival buffer (default 75 min), priority (fastest / least crowded / accessible / lowest walking).
 
+> **Build note:** only the default priority ("least crowded") drives the demo. The other priority options exist in the form but do not need their own ranking logic — the seeded ranking is the ranking. Do not build a real re-ranker per priority.
+
 **Outputs:** leave-by time, recommended route with steps, crowd-risk label (Low/Medium/High) with reason factors, tradeoff explanation, fallback route, and — once the match runs — a reactive egress plan.
 
 ### Routes (seeded)
@@ -121,7 +123,19 @@ Risk labels are always text + color, never color alone. The DEMO REPLAY pill is 
 
 **T-30 minutes:** feature freeze + full dress rehearsal.
 
-## 9. Demo risks and mitigations
+## 9. Cut line (pre-agreed, if time runs short)
+
+The demo-critical path is: **form → recommended plan on map → `n`: alert/rerank → `n`×4 through full-time egress.** Anything not on that path drops first, in this order:
+
+1. Origin choice (hardcode Union Station; chips become decorative)
+2. Fallback route card + Route C polyline (keep A/B only)
+3. `b` rewind key (recover by refreshing the page — replay is deterministic)
+4. Data-freshness pill (keep DEMO REPLAY pill — that one is non-negotiable)
+5. Separate Live-matchday panel (merge match clock + event feed into the plan panel)
+
+Never cut: the map with visibly re-drawing routes, the "Why this route?" factors, the rerank moment, the full-time egress plan, honest labeling.
+
+## 10. Demo risks and mitigations
 
 | Risk | Mitigation |
 |---|---|
@@ -130,10 +144,10 @@ Risk labels are always text + color, never color alone. The DEMO REPLAY pill is 
 | Overshooting an event mid-pitch | `b` key rewinds one event |
 | Judges ask "where's the AI?" | Deterministic explainable ranker by design; LLMs must never invent routes, closures, or timings |
 
-## 10. Future roadmap (not built, honest framing)
+## 11. Future roadmap (not built, honest framing)
 
 The v1.0 spec (git history) describes the full platform vision: city config adapters for other host cities, a FastAPI recommendation service, live GTFS-realtime feeds, WebSocket match-state streaming, and an interpretable ML crowd model. This build is the downtown-Toronto vertical slice of that vision — the engine's inputs (routes, risk factors, events) are structured exactly as that architecture would produce them, so the seeded layer is swappable for live services.
 
-## 11. Final project statement
+## 12. Final project statement
 
 MatchMile is not a better map. It is a **matchday mobility decision engine for downtown Toronto** that combines routing, crowd-risk estimation, transit disruptions, and live match timing into one explainable plan — when to leave, how to go, and how to get home when the match refuses to end on time.
