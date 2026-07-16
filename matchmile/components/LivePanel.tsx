@@ -32,10 +32,14 @@ const FEED_ICONS: Record<TimelineEvent["type"], string> = {
 
 export default function LivePanel({
   view,
+  adjustedLeaveBy,
 }: {
   view: ReturnType<typeof deriveReplayView>;
+  /** Leave-by shifted earlier for added city stops (null = no stops) */
+  adjustedLeaveBy?: string | null;
 }) {
   const recommended = routeById(view.planView.recommendedRouteId);
+  const leaveBy = adjustedLeaveBy ?? view.planView.leaveBy;
 
   return (
     <div className="flex flex-col gap-4 p-5">
@@ -87,9 +91,10 @@ export default function LivePanel({
             <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-white/55">
               Leave by{" "}
               <span className="font-semibold text-emerald-600 dark:text-emerald-300">
-                {view.planView.leaveBy}
+                {leaveBy}
               </span>
               , arrive {view.planView.arriveBy}.
+              {adjustedLeaveBy && ` Includes pre-match stop time (direct: ${view.planView.leaveBy}).`}
               {view.alertActive && " Route B demoted after the GO Lakeshore West alert."}
             </p>
           </div>

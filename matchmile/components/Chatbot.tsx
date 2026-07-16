@@ -7,9 +7,7 @@
  * chips guarantee a good answer even when free-text input doesn't match.
  */
 import { useEffect, useRef, useState } from "react";
-import type { Origin } from "@/data/seed";
-import { answerQuestion, SUGGESTED_QUESTIONS } from "@/lib/chatbot";
-import type { ReplayView } from "@/lib/replay";
+import { answerQuestion, SUGGESTED_QUESTIONS, type ChatContext } from "@/lib/chatbot";
 
 interface ChatMessage {
   id: string;
@@ -19,14 +17,14 @@ interface ChatMessage {
 
 let seq = 0;
 
-export default function Chatbot({ view, origin }: { view: ReplayView; origin: Origin }) {
+export default function Chatbot(ctx: ChatContext) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "intro",
       role: "bot",
-      text: "Ask me about your plan — leave times, route reasoning, crowd risk, delays, or what's happening nearby.",
+      text: "Ask me about your plan — leave times, things to do before the match, route reasoning, crowd risk, delays, or what's happening nearby.",
     },
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -41,7 +39,7 @@ export default function Chatbot({ view, origin }: { view: ReplayView; origin: Or
     setMessages((m) => [
       ...m,
       { id: `u-${seq++}`, role: "user", text: trimmed },
-      { id: `b-${seq++}`, role: "bot", text: answerQuestion(trimmed, view, origin) },
+      { id: `b-${seq++}`, role: "bot", text: answerQuestion(trimmed, ctx) },
     ]);
     setInput("");
   };

@@ -11,6 +11,7 @@ import { dataFreshnessSeconds, match, type Origin } from "@/data/seed";
 import { deriveReplayView, routeById } from "@/lib/replay";
 import { RouteCardFull, RouteCardCompact } from "@/components/RouteCard";
 import EventsNearby from "@/components/EventsNearby";
+import CityStops from "@/components/CityStops";
 
 interface RecommendedPanelProps {
   view: ReturnType<typeof deriveReplayView>;
@@ -18,6 +19,12 @@ interface RecommendedPanelProps {
   onEdit: () => void;
   /** Honest note when browser location is outside the seeded demo area */
   locationNote?: string | null;
+  /** Pre-match city stops folded into the plan */
+  addedStopIds: string[];
+  onToggleStop: (id: string) => void;
+  /** Leave-by shifted earlier to fit the added stops (null = no stops) */
+  adjustedLeaveBy: string | null;
+  stopExtraMinutes: number;
 }
 
 const IMPACT_STYLES: Record<string, string> = {
@@ -32,6 +39,10 @@ export default function RecommendedPanel({
   origin,
   onEdit,
   locationNote,
+  addedStopIds,
+  onToggleStop,
+  adjustedLeaveBy,
+  stopExtraMinutes,
 }: RecommendedPanelProps) {
   const [whyOpen, setWhyOpen] = useState(false);
   const { planView } = view;
@@ -71,15 +82,23 @@ export default function RecommendedPanel({
       {/* Hero — leave-by time */}
       <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]">
         <p
-          key={planView.leaveBy}
+          key={adjustedLeaveBy ?? planView.leaveBy}
           className="animate-fade-slide text-4xl font-bold tracking-tight text-slate-900 dark:text-white"
         >
           Leave by{" "}
-          <span className="text-emerald-600 dark:text-emerald-300">{planView.leaveBy}</span>
+          <span className="text-emerald-600 dark:text-emerald-300">
+            {adjustedLeaveBy ?? planView.leaveBy}
+          </span>
         </p>
         <p className="mt-1.5 text-xs text-slate-500 dark:text-white/55">
           arrive {planView.arriveBy} for the {match.kickoffLabel} kickoff
         </p>
+        {adjustedLeaveBy && (
+          <p className="animate-fade-slide mt-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
+            Includes ≈{stopExtraMinutes} min for {addedStopIds.length} pre-match{" "}
+            {addedStopIds.length === 1 ? "stop" : "stops"} · direct: {planView.leaveBy}
+          </p>
+        )}
         <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
           <span className="relative flex h-1.5 w-1.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60 dark:bg-emerald-300" />
@@ -172,6 +191,14 @@ export default function RecommendedPanel({
         {demoted && <RouteCardCompact route={demoted} tag="alert" />}
         {fallback && <RouteCardCompact route={fallback} tag="fallback" />}
       </div>
+
+      {/* Pre-match city experiences — add-to-plan shifts the leave-by */}
+      <CityStops
+        addedIds={addedStopIds}
+        onToggle={onToggleStop}
+        preMatch={view.heatPhase === "pre_match"}
+        defaultOpen={addedStopIds.length > 0}
+      />
 
       {/* Nearby events — chips key off the current replay phase */}
       <EventsNearby heatPhase={view.heatPhase} defaultOpen />

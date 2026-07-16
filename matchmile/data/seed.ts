@@ -16,6 +16,8 @@
  *   timeline   → THE scripted replay. Press `n` to advance, `b` to go back.
  *   heatPhases → forecasted crowd-pressure hotspots per replay phase (map heat)
  *   nearbyEvents → other seeded events tonight (fan festival, concert, Jays)
+ *   cityStops  → pre-match city experiences (activations, photo ops) that can
+ *                be added to the plan — leave-by shifts earlier to fit them
  * ============================================================================
  */
 
@@ -294,6 +296,8 @@ export const plan = {
     leaveBy: "5:32 PM",
     arriveBy: "~6:00 PM",
     countdown: "Departure window opens in 12 min",
+    tradeoff:
+      "6 minutes faster than Route B on paper, but runs the King St W corridor — with the rail alert standing, it's still the lowest-risk arrival.",
     whyChanged:
       "Alert affects Route B rail segment; Route A now recommended despite higher corridor exposure — leave 10 min earlier to compensate.",
     warningBanner:
@@ -479,6 +483,81 @@ export interface NearbyEvent {
   /** Replay phases during which this event adds pressure to the user's plan */
   affectsDuring: HeatPhaseKey[];
 }
+
+/* ----------------------------- City stops --------------------------------
+ * Pre-match city experiences for visiting fans — FIFA activation sites,
+ * photo ops and the fan festival. "Add to plan" folds one into the matchday
+ * plan: leave-by moves earlier by (detour + time on site). Seeded, like
+ * everything else.
+ * ------------------------------------------------------------------------ */
+
+export interface CityStop {
+  id: string;
+  name: string;
+  venue: string;
+  lat: number;
+  lng: number;
+  /** Emoji used for the map marker */
+  icon: string;
+  /** What's actually there, one honest line */
+  description: string;
+  photoOp: boolean;
+  openLabel: string;
+  /** Suggested time on site */
+  dwellMinutes: number;
+  /** Extra travel vs the direct route */
+  detourMinutes: number;
+  /** One practical visitor tip */
+  tip: string;
+}
+
+export const cityStops: CityStop[] = [
+  {
+    id: "nathan-phillips",
+    name: "FIFA Fan Activation — Nathan Phillips Square",
+    venue: "Toronto City Hall",
+    lat: 43.6525,
+    lng: -79.3835,
+    icon: "🏆",
+    description:
+      "Giant WORLD CUP letters, a trophy-replica photo op and sponsor activations under the City Hall arches.",
+    photoOp: true,
+    openLabel: "10 AM – 10 PM",
+    dwellMinutes: 40,
+    detourMinutes: 15,
+    tip: "Busiest at lunch — mid-afternoon has the shortest photo line.",
+  },
+  {
+    id: "fan-festival-early",
+    name: "Fan Festival — arrive early",
+    venue: "Exhibition Place",
+    lat: 43.6357,
+    lng: -79.4118,
+    icon: "🎪",
+    description:
+      "Live DJs, big screens and food trucks right beside the stadium — fold it in before gates open.",
+    photoOp: true,
+    openLabel: "3 – 11 PM",
+    dwellMinutes: 45,
+    detourMinutes: 5,
+    tip: "It sits beside BMO Field, so it barely adds travel — you just leave earlier.",
+  },
+  {
+    id: "harbourfront-mural",
+    name: "Waterfront Trophy Mural",
+    venue: "Harbourfront Centre — Queens Quay",
+    lat: 43.6387,
+    lng: -79.383,
+    icon: "📸",
+    description:
+      "Block-long World Cup mural with the skyline behind it, right on the Martin Goodman Trail.",
+    photoOp: true,
+    openLabel: "All day",
+    dwellMinutes: 20,
+    detourMinutes: 10,
+    tip: "Golden-hour light off the lake lands around 6 PM — right in your departure window.",
+  },
+];
 
 export const nearbyEvents: NearbyEvent[] = [
   {

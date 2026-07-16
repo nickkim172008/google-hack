@@ -103,7 +103,7 @@ export function deriveReplayView(index: number): ReplayView {
         leaveBy: plan.afterAlert.leaveBy,
         arriveBy: plan.afterAlert.arriveBy,
         countdown: plan.afterAlert.countdown,
-        tradeoff: plan.initial.tradeoff,
+        tradeoff: plan.afterAlert.tradeoff,
         whyChanged: plan.afterAlert.whyChanged,
         warningBanner: plan.afterAlert.warningBanner,
       }

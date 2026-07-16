@@ -14,8 +14,9 @@
  */
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { dataFreshnessSeconds, origins, timeline, type Origin } from "@/data/seed";
+import { cityStops, dataFreshnessSeconds, origins, timeline, type Origin } from "@/data/seed";
 import { deriveReplayView } from "@/lib/replay";
+import { shiftClockLabel } from "@/lib/time";
 import PlanPanel, { type MyLocationState } from "@/components/PlanPanel";
 import RecommendedPanel from "@/components/RecommendedPanel";
 import LivePanel from "@/components/LivePanel";
@@ -88,6 +89,9 @@ export default function Home() {
   // ----- Crowd-heat overlay -------------------------------------------------
   const [heatOn, setHeatOn] = useState(true);
 
+  // ----- Pre-match city stops folded into the plan ---------------------------
+  const [addedStopIds, setAddedStopIds] = useState<string[]>([]);
+
   // ----- Shared replay state (drives every panel + the map) -----------------
   const [eventIndex, setEventIndex] = useState(0);
   const [notice, setNotice] = useState<ToastNotice | null>(null);
@@ -103,6 +107,34 @@ export default function Home() {
     setNotice(n);
     if (noticeTimer.current) clearTimeout(noticeTimer.current);
     noticeTimer.current = setTimeout(() => setNotice(null), 4500);
+  };
+
+  // Adding a stop shifts leave-by earlier by (time on site + detour).
+  const addedStops = cityStops.filter((s) => addedStopIds.includes(s.id));
+  const stopExtraMinutes = addedStops.reduce((n, s) => n + s.dwellMinutes + s.detourMinutes, 0);
+  const adjustedLeaveBy =
+    stopExtraMinutes > 0 ? shiftClockLabel(view.planView.leaveBy, -stopExtraMinutes) : null;
+
+  const toggleStop = (id: string) => {
+    const stop = cityStops.find((s) => s.id === id);
+    if (!stop) return;
+    const adding = !addedStopIds.includes(id);
+    setAddedStopIds((prev) => (adding ? [...prev, id] : prev.filter((x) => x !== id)));
+    showNotice(
+      adding
+        ? {
+            id: `stop-add-${id}`,
+            icon: stop.icon,
+            title: `${stop.name} added to your plan`,
+            detail: `Leave-by moves ≈${stop.dwellMinutes + stop.detourMinutes} min earlier to fit it.`,
+          }
+        : {
+            id: `stop-rm-${id}`,
+            icon: stop.icon,
+            title: `${stop.name} removed`,
+            detail: "Leave-by time restored.",
+          }
+    );
   };
 
   const requestLocation = () => {
@@ -212,6 +244,7 @@ export default function Home() {
           heatPhase={view.heatPhase}
           userLocation={userLocation}
           showOriginMarker={!myLocationUsable}
+          addedStopIds={addedStopIds}
         />
       </div>
 
@@ -315,6 +348,10 @@ export default function Home() {
                 view={view}
                 origin={origin}
                 locationNote={locationNote}
+                addedStopIds={addedStopIds}
+                onToggleStop={toggleStop}
+                adjustedLeaveBy={adjustedLeaveBy}
+                stopExtraMinutes={stopExtraMinutes}
                 onEdit={() => {
                   setPlanBuilt(false);
                   setMobilePane("plan");
@@ -349,7 +386,7 @@ export default function Home() {
             } md:flex`}
           >
             <div className="scroll-area flex-1 overflow-y-auto overscroll-contain">
-              <LivePanel view={view} />
+              <LivePanel view={view} adjustedLeaveBy={adjustedLeaveBy} />
             </div>
           </section>
         )}
@@ -382,7 +419,14 @@ export default function Home() {
       <Toast notice={notice} />
 
       {/* Scripted matchday assistant */}
-      {planBuilt && <Chatbot view={view} origin={origin} />}
+      {planBuilt && (
+        <Chatbot
+          view={view}
+          origin={origin}
+          addedStops={addedStops}
+          leaveBy={adjustedLeaveBy ?? view.planView.leaveBy}
+        />
+      )}
     </main>
   );
 }

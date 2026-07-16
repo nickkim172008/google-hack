@@ -186,6 +186,15 @@ body {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+/* City stop folded into the plan — emerald ring, same pulse as the origin */
+.mm-marker-stop-active {
+  border-color: rgba(16, 185, 129, 0.9);
+  animation: mm-pulse-ring 2s ease-out infinite;
+}
+[data-theme="dark"] .mm-marker-stop-active {
+  border-color: rgba(52, 211, 153, 0.9);
+}
+
 /* ---------------------------------------------------------------------------
  * Animations
  * ------------------------------------------------------------------------- */

@@ -17,6 +17,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo } from "react";
 import {
+  cityStops,
   heatPhases,
   nearbyEvents,
   routes,
@@ -44,6 +45,8 @@ interface MapCanvasProps {
   userLocation: LatLng | null;
   /** Hide the emerald origin dot when the blue user dot IS the origin */
   showOriginMarker: boolean;
+  /** Pre-match city stops folded into the plan — highlighted + side-trip line */
+  addedStopIds: string[];
 }
 
 const routeA = routes.find((r) => r.id === "route-a")!;
@@ -110,6 +113,7 @@ export default function MapCanvas({
   heatPhase,
   userLocation,
   showOriginMarker,
+  addedStopIds,
 }: MapCanvasProps) {
   const styles = ROUTE_STYLES[theme];
 
@@ -172,6 +176,31 @@ export default function MapCanvas({
       ),
     []
   );
+
+  // Rebuilt when a stop is added/removed so the emerald ring appears.
+  const stopIcons = useMemo(
+    () =>
+      Object.fromEntries(
+        cityStops.map((s) => [
+          s.id,
+          L.divIcon({
+            className: "mm-divicon",
+            html: `<div class="mm-marker-event${addedStopIds.includes(s.id) ? " mm-marker-stop-active" : ""}">${s.icon}</div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+          }),
+        ])
+      ),
+    [addedStopIds]
+  );
+
+  const addedStops = cityStops.filter((s) => addedStopIds.includes(s.id));
+  const sideTripStyle = {
+    color: theme === "dark" ? "#34d399" : "#059669",
+    weight: 3,
+    opacity: 0.55,
+    dashArray: "3 7",
+  };
 
   return (
     <MapContainer
@@ -239,6 +268,29 @@ export default function MapCanvas({
           </Tooltip>
         </Marker>
       ))}
+
+      {/* Pre-match city stops (🏆 🎪 📸) — added ones get an emerald ring
+          and a schematic dashed side-trip line from the origin */}
+      {planBuilt &&
+        addedStops.map((s) => (
+          <Polyline
+            key={`side-trip-${s.id}`}
+            positions={[
+              [origin.lat, origin.lng],
+              [s.lat, s.lng],
+            ]}
+            pathOptions={sideTripStyle}
+          />
+        ))}
+      {planBuilt &&
+        cityStops.map((s) => (
+          <Marker key={s.id} position={[s.lat, s.lng]} icon={stopIcons[s.id]}>
+            <Tooltip direction="top" offset={[0, -14]}>
+              {s.name} · {s.openLabel}
+              {addedStopIds.includes(s.id) ? " · in your plan" : ""}
+            </Tooltip>
+          </Marker>
+        ))}
 
       {showOriginMarker && <Marker position={[origin.lat, origin.lng]} icon={originIcon} />}
       {userLocation && (
