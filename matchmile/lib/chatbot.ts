@@ -1,9 +1,8 @@
 /**
  * Scripted Q&A engine for the matchday assistant. No live LLM — answers are
- * template strings grounded entirely in the seeded plan/replay state, in
- * keeping with the "no live APIs" approach in data/seed.ts. Keyword matching
- * only; the suggested-question chips in the UI guarantee a good answer even
- * if free-text input misses.
+ * template strings grounded in the current plan state (live OSRM routes +
+ * scripted replay events). Keyword matching only; the suggested-question
+ * chips in the UI guarantee a good answer even if free-text input misses.
  */
 import {
   cityStops,
@@ -91,7 +90,7 @@ const rules: ChatRule[] = [
   {
     keywords: ["why", "route", "recommend"],
     answer: ({ view }) => {
-      const r = routeById(view.planView.recommendedRouteId);
+      const r = routeById(view.planView.recommendedRouteId, view.routes);
       const topFactor = r.factors[0];
       const reason = view.planView.whyChanged ?? view.planView.tradeoff;
       return `${r.name} is recommended (${r.modeSummary}, ${r.totalMinutes} min). ${reason} Key factor: ${topFactor.name} — ${topFactor.description}`;
@@ -100,7 +99,7 @@ const rules: ChatRule[] = [
   {
     keywords: ["crowd", "busy", "packed", "how full"],
     answer: ({ view }) => {
-      const r = routeById(view.planView.recommendedRouteId);
+      const r = routeById(view.planView.recommendedRouteId, view.routes);
       return `Est. crowd risk on ${r.name}: ${r.crowdRisk.label} (score ${r.crowdRisk.score}/100). ${HEAT_DESCRIPTIONS[view.heatPhase]}`;
     },
   },

@@ -156,8 +156,9 @@ export default function PlanPanel({
         </div>
         {originId === "my-location" && myLocationState === "outside" && (
           <p className="animate-fade-slide rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200">
-            You&apos;re outside the demo area — routes are seeded for downtown
-            Toronto, so Union Station stays the route origin.
+            You&apos;re outside the Toronto demo area — routes are computed
+            against the TTC/GO network here, so Union Station stays the route
+            origin.
           </p>
         )}
       </div>

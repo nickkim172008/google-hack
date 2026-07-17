@@ -38,7 +38,7 @@ export default function LivePanel({
   /** Leave-by shifted earlier for added city stops (null = no stops) */
   adjustedLeaveBy?: string | null;
 }) {
-  const recommended = routeById(view.planView.recommendedRouteId);
+  const recommended = routeById(view.planView.recommendedRouteId, view.routes);
   const leaveBy = adjustedLeaveBy ?? view.planView.leaveBy;
 
   return (

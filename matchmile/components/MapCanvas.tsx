@@ -20,11 +20,11 @@ import {
   cityStops,
   heatPhases,
   nearbyEvents,
-  routes,
   timeline,
   venue,
   type HeatPhaseKey,
   type Origin,
+  type Route,
 } from "@/data/seed";
 
 export interface LatLng {
@@ -34,6 +34,8 @@ export interface LatLng {
 
 interface MapCanvasProps {
   origin: Origin;
+  /** Route set to draw — live OSRM geometry, or the seeded fallback */
+  routes: Route[];
   alertActive: boolean;
   /** Routes are only drawn once a plan has been built */
   planBuilt: boolean;
@@ -49,9 +51,6 @@ interface MapCanvasProps {
   addedStopIds: string[];
 }
 
-const routeA = routes.find((r) => r.id === "route-a")!;
-const routeB = routes.find((r) => r.id === "route-b")!;
-const routeC = routes.find((r) => r.id === "route-c")!;
 const alertEvent = timeline.find((e) => e.type === "transit_alert");
 
 /** Midpoint between Union Station and BMO Field */
@@ -106,6 +105,7 @@ function PanToUser({ userLocation }: { userLocation: LatLng | null }) {
 
 export default function MapCanvas({
   origin,
+  routes,
   alertActive,
   planBuilt,
   theme,
@@ -116,6 +116,9 @@ export default function MapCanvas({
   addedStopIds,
 }: MapCanvasProps) {
   const styles = ROUTE_STYLES[theme];
+  const routeA = routes.find((r) => r.id === "route-a")!;
+  const routeB = routes.find((r) => r.id === "route-b")!;
+  const routeC = routes.find((r) => r.id === "route-c")!;
 
   const originIcon = useMemo(
     () =>

@@ -1,5 +1,23 @@
 /**
- * Shifts a seeded clock label like "5:42 PM" by deltaMinutes.
+ * Formats a Date as an "h:mm AM/PM" label in the venue's timezone
+ * (America/Toronto) — deterministic regardless of where the app renders,
+ * so SSR and client output match.
+ */
+const torontoClock = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+  timeZone: "America/Toronto",
+});
+
+export function formatTorontoClock(d: Date): string {
+  // Intl inserts a narrow no-break space before AM/PM — normalize to a
+  // plain space so shiftClockLabel's regex still matches.
+  return torontoClock.format(d).replace(/[  ]/g, " ");
+}
+
+/**
+ * Shifts a clock label like "5:42 PM" by deltaMinutes.
  * Returns the input unchanged if it isn't a plain h:mm AM/PM label
  * (e.g. "~6:15 PM" copy strings stay as-is).
  */

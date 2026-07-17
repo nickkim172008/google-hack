@@ -276,6 +276,19 @@ body {
   }
 }
 
+@keyframes mm-typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
 .animate-slide-in {
   animation: mm-slide-in 0.35s ease-out both;
 }
@@ -287,6 +300,9 @@ body {
 }
 .animate-flash {
   animation: mm-flash 0.9s ease-out 1;
+}
+.animate-typing-dot {
+  animation: mm-typing-dot 1.1s ease-in-out infinite;
 }
 
 /* Hidden-but-scrollable panels */

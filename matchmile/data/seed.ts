@@ -1,17 +1,21 @@
 /**
  * ============================================================================
- * MatchMile — SEED DATA (demo replay)
+ * MatchMile — SEED DATA (scripted replay + offline fallback)
  * ============================================================================
- * ALL demo data lives in this one file. Edit freely — the UI reads everything
- * from here. No live APIs are called anywhere in the app.
+ * ROUTES ARE LIVE: geometry, durations and leave-by times are computed at
+ * runtime from OSRM (lib/routing.ts) for the actual origin. The `routes`
+ * below are only the OFFLINE FALLBACK used if OSRM is unreachable — the demo
+ * degrades gracefully instead of breaking.
+ *
+ * The match events (timeline) remain a deterministic scripted replay, and the
+ * crowd-pressure hotspots are a forecast model — both intentionally seeded.
  *
  * Quick map:
  *   match      → the fixture shown on the Plan screen
  *   origins    → the 3 preset origin chips
  *   venue      → BMO Field (destination)
  *   fanZone    → official fan festival (used in the post-match egress plan)
- *   routes     → Route A / B / C with steps, polylines and crowd-risk factors
- *   plan       → leave-by / arrive-by copy, before and after the transit alert
+ *   routes     → OFFLINE FALLBACK Route A / B / C (live versions from OSRM)
  *   egress     → post-match departure copy (89' options, extra time, full-time)
  *   timeline   → THE scripted replay. Press `n` to advance, `b` to go back.
  *   heatPhases → forecasted crowd-pressure hotspots per replay phase (map heat)
@@ -128,6 +132,7 @@ export const fanZone = {
 };
 
 /* ----------------------------- Routes -----------------------------------
+ * OFFLINE FALLBACK ONLY — live routes come from OSRM via lib/routing.ts.
  * Route A — fastest, but runs through the primary pre-match crowd corridor.
  * Route B — recommended by default: rail bypasses the corridor entirely.
  * Route C — fallback: waterfront streetcar + Martin Goodman Trail walk.
@@ -271,39 +276,6 @@ export const routes: Route[] = [
     ],
   },
 ];
-
-/* ----------------------------- Plan copy ---------------------------------
- * Leave-by / arrive-by strings shown in the hero, before and after the
- * scripted transit alert reranks the routes.
- * ------------------------------------------------------------------------ */
-
-export const plan = {
-  /** Initial state — Route B recommended (least crowded) */
-  initial: {
-    recommendedRouteId: "route-b",
-    alternativeRouteId: "route-a",
-    fallbackRouteId: "route-c",
-    leaveBy: "5:42 PM",
-    arriveBy: "~6:15 PM",
-    countdown: "Departure window opens in 42 min",
-    tradeoff: "Adds 6 minutes vs Route A, avoids the primary stadium arrival corridor.",
-  },
-  /** After the transit alert — Route A promoted, Route B demoted */
-  afterAlert: {
-    recommendedRouteId: "route-a",
-    alternativeRouteId: "route-c",
-    demotedRouteId: "route-b",
-    leaveBy: "5:32 PM",
-    arriveBy: "~6:00 PM",
-    countdown: "Departure window opens in 12 min",
-    tradeoff:
-      "6 minutes faster than Route B on paper, but runs the King St W corridor — with the rail alert standing, it's still the lowest-risk arrival.",
-    whyChanged:
-      "Alert affects Route B rail segment; Route A now recommended despite higher corridor exposure — leave 10 min earlier to compensate.",
-    warningBanner:
-      "Service alert: GO Lakeshore West — delays at Exhibition GO. Plan reranked.",
-  },
-};
 
 /* ----------------------------- Egress copy ------------------------------- */
 

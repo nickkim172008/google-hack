@@ -13,6 +13,7 @@ interface ChatMessage {
   id: string;
   role: "user" | "bot";
   text: string;
+  pending?: boolean;
 }
 
 let seq = 0;
@@ -27,21 +28,38 @@ export default function Chatbot(ctx: ChatContext) {
       text: "Ask me about your plan — leave times, things to do before the match, route reasoning, crowd risk, delays, or what's happening nearby.",
     },
   ]);
+  const [thinking, setThinking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const replyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
+  useEffect(() => {
+    return () => {
+      if (replyTimer.current) clearTimeout(replyTimer.current);
+    };
+  }, []);
+
   const ask = (question: string) => {
     const trimmed = question.trim();
-    if (!trimmed) return;
+    if (!trimmed || thinking) return;
+    const answer = answerQuestion(trimmed, ctx);
+    const botId = `b-${seq++}`;
     setMessages((m) => [
       ...m,
       { id: `u-${seq++}`, role: "user", text: trimmed },
-      { id: `b-${seq++}`, role: "bot", text: answerQuestion(trimmed, ctx) },
+      { id: botId, role: "bot", text: "", pending: true },
     ]);
     setInput("");
+    setThinking(true);
+    replyTimer.current = setTimeout(() => {
+      setMessages((m) =>
+        m.map((msg) => (msg.id === botId ? { ...msg, text: answer, pending: false } : msg))
+      );
+      setThinking(false);
+    }, 900 + Math.random() * 600);
   };
 
   return (
@@ -66,10 +84,7 @@ export default function Chatbot(ctx: ChatContext) {
             <span className="grid h-6 w-6 place-items-center rounded-lg bg-gradient-to-br from-emerald-300 to-emerald-500 text-xs">
               💬
             </span>
-            <div className="leading-tight">
-              <p className="text-xs font-semibold text-slate-900 dark:text-white">Matchday assistant</p>
-              <p className="text-[9px] text-slate-400 dark:text-white/40">Scripted · answers from your plan</p>
-            </div>
+            <p className="text-xs font-semibold text-slate-900 dark:text-white">Matchday assistant</p>
           </div>
 
           <div
@@ -85,7 +100,19 @@ export default function Chatbot(ctx: ChatContext) {
                     : "bg-slate-100 text-slate-700 dark:bg-white/[0.06] dark:text-white/80"
                 }`}
               >
-                {m.text}
+                {m.pending ? (
+                  <span className="inline-flex items-center gap-1 py-1" aria-label="Assistant is thinking">
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className="animate-typing-dot h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-white/50"
+                        style={{ animationDelay: `${i * 0.18}s` }}
+                      />
+                    ))}
+                  </span>
+                ) : (
+                  m.text
+                )}
               </div>
             ))}
           </div>

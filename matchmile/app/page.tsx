@@ -14,8 +14,9 @@
  */
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { cityStops, dataFreshnessSeconds, origins, timeline, type Origin } from "@/data/seed";
+import { cityStops, origins, routes as seedRoutes, timeline, type Origin, type Route } from "@/data/seed";
 import { deriveReplayView } from "@/lib/replay";
+import { buildLiveRoutes } from "@/lib/routing";
 import { shiftClockLabel } from "@/lib/time";
 import PlanPanel, { type MyLocationState } from "@/components/PlanPanel";
 import RecommendedPanel from "@/components/RecommendedPanel";
@@ -44,8 +45,8 @@ const EVENT_ICONS: Record<string, string> = {
   full_time: "🏁",
 };
 
-/** Downtown Toronto demo area — routes are seeded for this bbox only */
-const DEMO_BBOX = { latMin: 43.6, latMax: 43.69, lngMin: -79.48, lngMax: -79.3 };
+/** Toronto demo area — live routing is anchored to the TTC/GO network here */
+const DEMO_BBOX = { latMin: 43.55, latMax: 43.78, lngMin: -79.6, lngMax: -79.2 };
 const inDemoArea = (lat: number, lng: number) =>
   lat >= DEMO_BBOX.latMin &&
   lat <= DEMO_BBOX.latMax &&
@@ -101,7 +102,65 @@ export default function Home() {
   // ----- Mobile: which sheet is visible --------------------------------------
   const [mobilePane, setMobilePane] = useState<"plan" | "live">("plan");
 
-  const view = deriveReplayView(eventIndex);
+  // ----- LIVE routing (OSRM) — recomputed whenever the origin changes -------
+  // Result is tagged with the origin it was computed for, so the status pill
+  // ("loading" vs "live"/"fallback") derives without extra state.
+  const [liveResult, setLiveResult] = useState<{
+    key: string;
+    routes: Route[] | null;
+  } | null>(null);
+
+  // Effective origin is derived below; capture primitives for the effect.
+  const presetOrigin = origins.find((o) => o.id === originId) ?? origins[0];
+  const usingMyLocation = originId === "my-location";
+  const myLocationUsable =
+    usingMyLocation && userLocation !== null && inDemoArea(userLocation.lat, userLocation.lng);
+  const origin: Origin = myLocationUsable
+    ? { id: "my-location", label: "My location", lat: userLocation!.lat, lng: userLocation!.lng }
+    : usingMyLocation
+      ? origins[0]
+      : presetOrigin;
+
+  const originLat = origin.lat;
+  const originLng = origin.lng;
+  const originKey = `${originLat},${originLng}`;
+  useEffect(() => {
+    let stale = false;
+    buildLiveRoutes({ lat: originLat, lng: originLng })
+      .then((r) => {
+        if (!stale) setLiveResult({ key: `${originLat},${originLng}`, routes: r });
+      })
+      .catch(() => {
+        if (!stale) setLiveResult({ key: `${originLat},${originLng}`, routes: null });
+      });
+    return () => {
+      stale = true;
+    };
+  }, [originLat, originLng]);
+
+  const liveRoutes = liveResult?.key === originKey ? liveResult.routes : null;
+  const routingState: "loading" | "live" | "fallback" =
+    liveResult?.key !== originKey ? "loading" : liveRoutes ? "live" : "fallback";
+
+  // Wall clock for the departure countdown — null until mounted so the SSR
+  // and first client render match; then ticks every 30 s.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    // Mount-time setState is intentional: the countdown needs Date.now(),
+    // which must not run during SSR or it would desync hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(Date.now());
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const view = deriveReplayView(eventIndex, {
+    routes: liveRoutes ?? seedRoutes,
+    routesSource: liveRoutes ? "live" : "seeded",
+    bufferMinutes: buffer,
+    priority,
+    now,
+  });
 
   const showNotice = (n: ToastNotice) => {
     setNotice(n);
@@ -174,20 +233,9 @@ export default function Home() {
     );
   };
 
-  // Effective origin: browser location only counts inside the seeded demo
-  // area; otherwise Union Station honestly remains the route origin.
-  const presetOrigin = origins.find((o) => o.id === originId) ?? origins[0];
-  const usingMyLocation = originId === "my-location";
-  const myLocationUsable =
-    usingMyLocation && userLocation !== null && inDemoArea(userLocation.lat, userLocation.lng);
-  const origin: Origin = myLocationUsable
-    ? { id: "my-location", label: "My location", lat: userLocation!.lat, lng: userLocation!.lng }
-    : usingMyLocation
-      ? origins[0]
-      : presetOrigin;
   const locationNote =
     usingMyLocation && myLocationState === "outside"
-      ? "You're outside the demo area — routes are seeded for downtown Toronto, so Union Station stays the route origin."
+      ? "You're outside the Toronto demo area — routes are computed against the TTC/GO network here, so Union Station stays the route origin."
       : null;
 
   // Keyboard-only replay controls: `n` next, `b` back.
@@ -237,6 +285,7 @@ export default function Home() {
       <div className="absolute inset-0 z-0">
         <MapCanvas
           origin={origin}
+          routes={view.routes}
           alertActive={view.alertActive}
           planBuilt={planBuilt}
           theme={theme}
@@ -302,9 +351,22 @@ export default function Home() {
             DEMO REPLAY
           </span>
           <span
-            className={`rounded-full border px-3 py-1.5 text-[10px] text-slate-500 dark:text-white/55 ${chipShell}`}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-wider ${chipShell} ${
+              routingState === "live"
+                ? "border-emerald-500/50 text-emerald-700 dark:border-emerald-400/40 dark:text-emerald-300"
+                : routingState === "loading"
+                  ? "text-slate-500 dark:text-white/55"
+                  : "border-rose-400/50 text-rose-700 dark:border-rose-400/40 dark:text-rose-300"
+            }`}
           >
-            Data freshness: {dataFreshnessSeconds}s
+            {routingState === "live" && (
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500 dark:bg-emerald-300" />
+            )}
+            {routingState === "live"
+              ? "ROUTES LIVE · OSRM"
+              : routingState === "loading"
+                ? "COMPUTING ROUTES…"
+                : "ROUTES OFFLINE — SEEDED FALLBACK"}
           </span>
         </div>
 

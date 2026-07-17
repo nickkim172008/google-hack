@@ -47,10 +47,12 @@ export default function RecommendedPanel({
   const [whyOpen, setWhyOpen] = useState(false);
   const { planView } = view;
 
-  const recommended = routeById(planView.recommendedRouteId);
-  const alternative = routeById(planView.alternativeRouteId);
-  const demoted = planView.demotedRouteId ? routeById(planView.demotedRouteId) : null;
-  const fallback = !planView.demotedRouteId ? routeById(planView.fallbackRouteId) : null;
+  const recommended = routeById(planView.recommendedRouteId, view.routes);
+  const alternative = routeById(planView.alternativeRouteId, view.routes);
+  const demoted = planView.demotedRouteId ? routeById(planView.demotedRouteId, view.routes) : null;
+  const fallback = !planView.demotedRouteId
+    ? routeById(planView.fallbackRouteId, view.routes)
+    : null;
 
   return (
     <div className="flex flex-col gap-4 p-5">
@@ -58,7 +60,7 @@ export default function RecommendedPanel({
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-white/40">
-            Recommended plan · Least crowded
+            Recommended plan · {planView.priorityLabel}
           </p>
           <p className="mt-0.5 text-[11px] text-slate-500 dark:text-white/45">
             {origin.label} → {match.venueName}
@@ -209,8 +211,14 @@ export default function RecommendedPanel({
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 dark:bg-amber-300" />
           DEMO REPLAY
         </span>
-        <span className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-white/50">
-          Data freshness: {dataFreshnessSeconds}s
+        <span
+          className={`rounded-full border px-2.5 py-1 text-[10px] ${
+            view.routesSource === "live"
+              ? "border-emerald-500/40 bg-emerald-50 text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-300"
+              : "border-slate-200 bg-slate-100 text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-white/50"
+          }`}
+        >
+          {view.routesSource === "live" ? "Live routing · OSRM" : "Offline fallback routes"}
         </span>
       </div>
     </div>
